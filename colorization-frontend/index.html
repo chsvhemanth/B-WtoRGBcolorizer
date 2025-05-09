@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hemanth's Photo Colorizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            text-align: center;
+            background-color: #f4f4f9;
+        }
+
+        h1 {
+            color: #4CAF50;
+            font-size: 2.5em;
+        }
+
+        .preview, .result {
+            margin-top: 20px;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            margin-top: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        input[type="file"] {
+            font-size: 1em;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .preview img {
+            max-width: 100%;
+            height: auto;
+            margin-top: 10px;
+        }
+
+        .result img {
+            margin-top: 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .alert {
+            color: red;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hemanth's Photo Colorizer</h1>
+    <p>Upload a black and white photo to see it colorized in seconds!</p>
+    <input type="file" id="imageInput" accept="image/*">
+    
+    <div class="preview">
+        <h3>Preview:</h3>
+        <img id="previewImage" src="#" alt="No image selected" />
+    </div>
+
+    <button onclick="uploadImage()">Colorize</button>
+
+    <div class="result">
+        <h3>Colorized Result:</h3>
+        <img id="resultImage" src="#" alt="No result yet" />
+    </div>
+
+    <script>
+        const previewImage = document.getElementById("previewImage");
+        const resultImage = document.getElementById("resultImage");
+        const imageInput = document.getElementById("imageInput");
+
+        imageInput.onchange = function () {
+            const file = this.files[0];
+            if (file) {
+                previewImage.src = URL.createObjectURL(file);
+                
+                // Reset the result image when a new image is selected
+                resultImage.src = "#";
+                resultImage.style.width = "auto";  // Reset the width
+                resultImage.style.height = "auto"; // Reset the height
+            }
+        };
+
+        async function uploadImage() {
+            const file = imageInput.files[0];
+            if (!file) {
+                alert("Please select an image first.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await fetch("http://127.0.0.1:8000/colorize_image/", {  // Ensure the URL matches your backend
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error("Server error");
+                }
+
+                const blob = await response.blob();
+                const imageUrl = URL.createObjectURL(blob);
+
+                // Set the result image src to the colorized image
+                resultImage.src = imageUrl;
+
+                // Wait for the result image to load, then adjust the size
+                resultImage.onload = function () {
+                    // Set the result image dimensions to the original uploaded image
+                    const width = previewImage.width;
+                    const height = previewImage.height;
+
+                    resultImage.style.width = `${width}px`;  // Set the width to the uploaded image width
+                    resultImage.style.height = `${height}px`; // Set the height to the uploaded image height
+                };
+            } catch (error) {
+                alert("Failed to upload or process image: " + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
